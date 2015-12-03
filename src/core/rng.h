@@ -43,7 +43,13 @@
 // Random Number Declarations
 class RNG {
 public:
-    RNG(uint32_t seed = 5489UL) {
+    RNG(uint32_t seed) {// = 5489UL) {
+        mti = N+1; /* mti==N+1 means mt[N] is not initialized */
+        Seed(seed);
+    }
+
+	RNG() {
+		uint32_t seed = rand();//5489UL;
         mti = N+1; /* mti==N+1 means mt[N] is not initialized */
         Seed(seed);
     }

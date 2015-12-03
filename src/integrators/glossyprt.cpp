@@ -70,14 +70,14 @@ void GlossyPRTIntegrator::RequestSamples(Sampler *sampler, Sample *sample, const
 
 Spectrum GlossyPRTIntegrator::Li(const Scene *scene, const Renderer *,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const {
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Spectrum L = 0.f;
     Vector wo = -ray.d;
     // Compute emitted light if ray hit an area light source
     L += isect.Le(wo);
 
     // Evaluate BSDF at hit point
-    BSDF *bsdf = isect.GetBSDF(ray, arena);
+    BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
     const Point &p = bsdf->dgShading.p;
     // Compute reflected radiance with glossy PRT at point
 

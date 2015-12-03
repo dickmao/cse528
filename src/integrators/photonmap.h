@@ -58,9 +58,21 @@ public:
     ~PhotonIntegrator();
     Spectrum Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect, const Sample *sample,
-        RNG &rng, MemoryArena &arena) const;
+        RNG &rng, MemoryArena &arena, bool isSpecular = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     void RequestSamples(Sampler *sampler, Sample *sample, const Scene *scene);
     void Preprocess(const Scene *scene, const Camera *camera, const Renderer *renderer);
+	LightSampleOffsets* getLightOffset() {
+		return NULL;
+	}
+	BSDFSampleOffsets* getBSDFOffset() {
+		return NULL;
+	}
+	int getLightNumOffset() {
+		return -1;
+	}
+	BSDFSampleOffsets* getPathOffset() {
+		return NULL;
+	}
 private:
     // PhotonIntegrator Private Methods
     friend class PhotonShootingTask;

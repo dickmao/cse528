@@ -42,9 +42,9 @@
 // MixMaterial Method Definitions
 BSDF *MixMaterial::GetBSDF(const DifferentialGeometry &dgGeom,
                            const DifferentialGeometry &dgShading,
-                           MemoryArena &arena) const {
-    BSDF *b1 = m1->GetBSDF(dgGeom, dgShading, arena);
-    BSDF *b2 = m2->GetBSDF(dgGeom, dgShading, arena);
+                           MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
+    BSDF *b1 = m1->GetBSDF(dgGeom, dgShading, arena, bounceNum);
+    BSDF *b2 = m2->GetBSDF(dgGeom, dgShading, arena, bounceNum);
     Spectrum s1 = scale->Evaluate(dgShading).Clamp();
     Spectrum s2 = (Spectrum(1.f) - s1).Clamp();
     int n1 = b1->NumComponents(), n2 = b2->NumComponents();

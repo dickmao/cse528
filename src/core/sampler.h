@@ -70,6 +70,7 @@ struct CameraSample {
     float imageX, imageY;
     float lensU, lensV;
     float time;
+	size_t sampleNum; // MOD
 };
 
 

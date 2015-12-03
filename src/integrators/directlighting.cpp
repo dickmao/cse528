@@ -35,6 +35,7 @@
 #include "integrators/directlighting.h"
 #include "intersection.h"
 #include "paramset.h"
+#include "../SampleWriter/SampleWriter.h" // MOD
 
 // DirectLightingIntegrator Method Definitions
 DirectLightingIntegrator::DirectLightingIntegrator(LightStrategy st, int md) {
@@ -80,10 +81,15 @@ void DirectLightingIntegrator::RequestSamples(Sampler *sampler,
 
 Spectrum DirectLightingIntegrator::Li(const Scene *scene,
         const Renderer *renderer, const RayDifferential &ray,
-        const Intersection &isect, const Sample *sample, RNG &rng, MemoryArena &arena) const {
+        const Intersection &isect, const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Spectrum L(0.f);
     // Evaluate BSDF at hit point
-    BSDF *bsdf = isect.GetBSDF(ray, arena);
+	BSDF* bsdf;
+	if(!isSpecular) {
+		bsdf = isect.GetBSDF(ray, arena, 0, isSpecular, 0);
+	} else {
+		bsdf = isect.GetBSDF(ray, arena, 1, 0, 1);
+	}
     Vector wo = -ray.d;
     const Point &p = bsdf->dgShading.p;
     const Normal &n = bsdf->dgShading.nn;
@@ -91,22 +97,28 @@ Spectrum DirectLightingIntegrator::Li(const Scene *scene,
     L += isect.Le(wo);
 
     // Compute direct lighting for _DirectLightingIntegrator_ integrator
-    if (scene->lights.size() > 0) {
+	Spectrum LTemp;
+    if (scene->lights.size() > 0 && ray.depth != -1) {
         // Apply direct lighting strategy
         switch (strategy) {
             case SAMPLE_ALL_UNIFORM:
-                L += UniformSampleAllLights(scene, renderer, arena, p, n, wo,
+                LTemp = UniformSampleAllLights(scene, renderer, arena, p, n, wo,
                     isect.rayEpsilon, ray.time, bsdf, sample, rng,
-                    lightSampleOffsets, bsdfSampleOffsets);
+                    lightSampleOffsets, bsdfSampleOffsets, isSpecular);
                 break;
             case SAMPLE_ONE_UNIFORM:
-                L += UniformSampleOneLight(scene, renderer, arena, p, n, wo,
+				int bounceNum = 0;
+				if(isSpecular) {
+					bounceNum = -1;
+				} 
+                LTemp = UniformSampleOneLight(scene, renderer, arena, p, n, wo,
                     isect.rayEpsilon, ray.time, bsdf, sample, rng,
-                    lightNumOffset, lightSampleOffsets, bsdfSampleOffsets);
+                    lightNumOffset, lightSampleOffsets, bsdfSampleOffsets, bounceNum);
                 break;
         }
     }
-    if (ray.depth + 1 < maxDepth) {
+	L += LTemp;
+    if (ray.depth + 1 < maxDepth && ray.depth != -1) {
         Vector wi;
         // Trace rays for specular reflection and refraction
         L += SpecularReflect(ray, bsdf, rng, isect, renderer, scene, sample,
@@ -114,8 +126,59 @@ Spectrum DirectLightingIntegrator::Li(const Scene *scene,
         L += SpecularTransmit(ray, bsdf, rng, isect, renderer, scene, sample,
                               arena);
     }
+
     return L;
 }
+
+
+//Spectrum DirectLightingIntegrator::Li(const Scene *scene,
+//        const Renderer *renderer, const RayDifferential &ray,
+//        const Intersection &isect, const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
+//    Spectrum L(0.f);
+//    // Evaluate BSDF at hit point
+//	BSDF* bsdf;
+//	if(!isSpecular) {
+//		bsdf = isect.GetBSDF(ray, arena, 0, isSpecular, 0);
+//	} else {
+//		bsdf = isect.GetBSDF(ray, arena, 1, 0, 1);
+//	}
+//    Vector wo = -ray.d;
+//    const Point &p = bsdf->dgShading.p;
+//    const Normal &n = bsdf->dgShading.nn;
+//    // Compute emitted light if ray hit an area light source
+//    L += isect.Le(wo);
+//
+//    // Compute direct lighting for _DirectLightingIntegrator_ integrator
+//    if (scene->lights.size() > 0) {
+//        // Apply direct lighting strategy
+//        switch (strategy) {
+//            case SAMPLE_ALL_UNIFORM:
+//                L += UniformSampleAllLights(scene, renderer, arena, p, n, wo,
+//                    isect.rayEpsilon, ray.time, bsdf, sample, rng,
+//                    lightSampleOffsets, bsdfSampleOffsets, isSpecular);
+//                break;
+//            case SAMPLE_ONE_UNIFORM:
+//				int bounceNum = 0;
+//				if(isSpecular) {
+//					bounceNum = -1;
+//				} 
+//                L += UniformSampleOneLight(scene, renderer, arena, p, n, wo,
+//                    isect.rayEpsilon, ray.time, bsdf, sample, rng,
+//                    lightNumOffset, lightSampleOffsets, bsdfSampleOffsets, bounceNum);
+//                break;
+//        }
+//    }
+//
+//    if (ray.depth + 1 < maxDepth) {
+//        Vector wi;
+//        // Trace rays for specular reflection and refraction
+//        L += SpecularReflect(ray, bsdf, rng, isect, renderer, scene, sample,
+//                             arena);
+//        L += SpecularTransmit(ray, bsdf, rng, isect, renderer, scene, sample,
+//                              arena);
+//    }
+//    return L;
+//}
 
 
 DirectLightingIntegrator *CreateDirectLightingIntegrator(const ParamSet &params) {

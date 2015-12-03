@@ -46,15 +46,19 @@ public:
     // Material Interface
     virtual BSDF *GetBSDF(const DifferentialGeometry &dgGeom,
                           const DifferentialGeometry &dgShading,
-                          MemoryArena &arena) const = 0;
+                          MemoryArena &arena, int bounceNum, bool isSpecularBounce = false, bool saveTexture2 = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const = 0;
     virtual BSSRDF *GetBSSRDF(const DifferentialGeometry &dgGeom,
                               const DifferentialGeometry &dgShading,
                               MemoryArena &arena) const {
         return NULL;
     }
     virtual ~Material();
+
+	virtual float getReflectanceProb() = 0;
+
     static void Bump(const Reference<Texture<float> > &d, const DifferentialGeometry &dgGeom,
         const DifferentialGeometry &dgShading, DifferentialGeometry *dgBump);
+
 };
 
 

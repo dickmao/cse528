@@ -306,7 +306,7 @@ inline void LDShuffleScrambled1D(int nSamples, int nPixel,
     uint32_t scramble = rng.RandomUInt();
     for (int i = 0; i < nSamples * nPixel; ++i)
         samples[i] = VanDerCorput(i, scramble);
-    for (int i = 0; i < nPixel; ++i)
+   for (int i = 0; i < nPixel; ++i)
         Shuffle(samples + i * nSamples, nSamples, 1, rng);
     Shuffle(samples, nPixel, nSamples, rng);
 }

@@ -51,9 +51,15 @@ public:
     float GenerateRay(const CameraSample &sample, Ray *) const;
     float GenerateRayDifferential(const CameraSample &sample,
                                   RayDifferential *ray) const;
+
+	float getFOV() {
+		return fov;
+	}
+
 private:
     // PerspectiveCamera Private Data
     Vector dxCamera, dyCamera;
+	float fov;
 };
 
 

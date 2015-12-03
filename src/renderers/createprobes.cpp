@@ -44,7 +44,7 @@
 #include "volume.h"
 #include "paramset.h"
 #include "montecarlo.h"
-#if defined(PBRT_IS_WINDOWS) || defined(PBRT_IS_LINUX)|| defined(PBRT_IS_OPENBSD)
+#if defined(PBRT_IS_WINDOWS) || defined(PBRT_IS_LINUX)
 #include <errno.h>
 #else
 #include <sys/errno.h>
@@ -99,7 +99,7 @@ CreateRadianceProbes::~CreateRadianceProbes() {
 
 Spectrum CreateRadianceProbes::Li(const Scene *scene, const RayDifferential &ray,
         const Sample *sample, RNG &rng, MemoryArena &arena, Intersection *isect,
-        Spectrum *T) const {
+        Spectrum *T, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Assert(ray.time == sample->time);
     Spectrum localT;
     if (!T) T = &localT;

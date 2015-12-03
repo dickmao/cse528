@@ -37,11 +37,12 @@
 #include "reflection.h"
 #include "diffgeom.h"
 #include "texture.h"
+#include "../SampleWriter/SampleWriter.h" // MOD
 
 // MatteMaterial Method Definitions
 BSDF *MatteMaterial::GetBSDF(const DifferentialGeometry &dgGeom,
                              const DifferentialGeometry &dgShading,
-                             MemoryArena &arena) const {
+                             MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     // Allocate _BSDF_, possibly doing bump mapping with _bumpMap_
     DifferentialGeometry dgs;
     if (bumpMap)
@@ -59,6 +60,52 @@ BSDF *MatteMaterial::GetBSDF(const DifferentialGeometry &dgGeom,
         else
             bsdf->Add(BSDF_ALLOC(arena, OrenNayar)(r, sig));
     }
+
+	//********************** MOD ************************//
+
+	#if SAVE_SAMPLES
+
+		if(!isSpecularBounce) {
+
+			if(bounceNum == 0) {
+				Spectrum kd = Kd->Evaluate(dgs).Clamp();
+				float rgb[NUM_OF_COLORS];
+				kd.ToRGB(rgb);
+
+				float currentR = SampleWriter::getFeature(arena.getX(), arena.getY(), arena.getSampleNum(), TEXTURE_1_X_OFFSET);
+				float currentG = SampleWriter::getFeature(arena.getX(), arena.getY(), arena.getSampleNum(), TEXTURE_1_Y_OFFSET);
+				float currentB = SampleWriter::getFeature(arena.getX(), arena.getY(), arena.getSampleNum(), TEXTURE_1_Z_OFFSET);
+
+				if(currentR == 0 && currentG == 0 && currentB == 0) {
+					SampleWriter::setFeature(arena.getX(), arena.getY(), arena.getSampleNum(), rgb[0], TEXTURE_1_X_OFFSET);
+					SampleWriter::setFeature(arena.getX(), arena.getY(), arena.getSampleNum(), rgb[1], TEXTURE_1_Y_OFFSET);
+					SampleWriter::setFeature(arena.getX(), arena.getY(), arena.getSampleNum(), rgb[2], TEXTURE_1_Z_OFFSET);
+				}
+		
+			} 
+
+		}
+		
+		if(saveTexture2) {
+
+			Spectrum kd = Kd->Evaluate(dgs).Clamp();
+			float rgb[NUM_OF_COLORS];
+			kd.ToRGB(rgb);
+				
+			float currentR = SampleWriter::getFeature(arena.getX(), arena.getY(), arena.getSampleNum(), TEXTURE_2_X_OFFSET);
+			float currentG = SampleWriter::getFeature(arena.getX(), arena.getY(), arena.getSampleNum(), TEXTURE_2_Y_OFFSET);
+			float currentB = SampleWriter::getFeature(arena.getX(), arena.getY(), arena.getSampleNum(), TEXTURE_2_Z_OFFSET);
+
+			SampleWriter::setFeature(arena.getX(), arena.getY(), arena.getSampleNum(), currentR + rWeight * rgb[0], TEXTURE_2_X_OFFSET);
+			SampleWriter::setFeature(arena.getX(), arena.getY(), arena.getSampleNum(), currentG + gWeight * rgb[1], TEXTURE_2_Y_OFFSET);
+			SampleWriter::setFeature(arena.getX(), arena.getY(), arena.getSampleNum(), currentB + bWeight * rgb[2], TEXTURE_2_Z_OFFSET);
+		
+		}
+
+	#endif
+
+	//***************************************************//
+
     return bsdf;
 }
 

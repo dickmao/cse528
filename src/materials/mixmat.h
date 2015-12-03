@@ -50,7 +50,12 @@ public:
     }
     BSDF *GetBSDF(const DifferentialGeometry &dgGeom,
                   const DifferentialGeometry &dgShading,
-                  MemoryArena &arena) const;
+                  MemoryArena &arena, int bounceNum, bool isSpecularBounce = false, bool saveTexture2 = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
+
+	float getReflectanceProb() {
+		return -1.0f;
+	}
+
 private:
     // MixMaterial Private Data
     Reference<Material> m1, m2;

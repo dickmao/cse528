@@ -143,11 +143,37 @@ public:
             usedBlocks.pop_back();
         }
     }
+
+	size_t getX() {
+		return x;
+	}
+
+	size_t getY() {
+		return y;
+	}
+
+	size_t getSampleNum() {
+		return sampleNum;
+	}
+
+	void setX(size_t x) {
+		this->x = x;
+	}
+
+	void setY(size_t y) {
+		this->y = y;
+	}
+
+	void setSampleNum(size_t sampleNum) {
+		this->sampleNum = sampleNum;
+	}
+
 private:
     // MemoryArena Private Data
     uint32_t curBlockPos, blockSize;
     char *currentBlock;
     vector<char *> usedBlocks, availableBlocks;
+	size_t x; size_t y; size_t sampleNum;
 };
 
 

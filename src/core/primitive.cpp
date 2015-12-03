@@ -75,7 +75,7 @@ const AreaLight *Aggregate::GetAreaLight() const {
 
 
 BSDF *Aggregate::GetBSDF(const DifferentialGeometry &,
-        const Transform &, MemoryArena &) const {
+        const Transform &, MemoryArena &, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     Severe("Aggregate::GetBSDF() method"
         "called; should have gone to GeometricPrimitive");
     return NULL;
@@ -183,10 +183,10 @@ const AreaLight *GeometricPrimitive::GetAreaLight() const {
 
 BSDF *GeometricPrimitive::GetBSDF(const DifferentialGeometry &dg,
                                   const Transform &ObjectToWorld,
-                                  MemoryArena &arena) const {
+                                  MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     DifferentialGeometry dgs;
     shape->GetShadingGeometry(ObjectToWorld, dg, &dgs);
-    return material->GetBSDF(dg, dgs, arena);
+    return material->GetBSDF(dg, dgs, arena, bounceNum, isSpecularBounce, saveTexture2, rWeight, gWeight, bWeight);
 }
 
 

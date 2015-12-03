@@ -62,7 +62,7 @@ public:
     void Render(const Scene *scene);
     Spectrum Li(const Scene *scene, const RayDifferential &ray,
         const Sample *sample, RNG &rng, MemoryArena &arena,
-        Intersection *isect, Spectrum *T) const;
+        Intersection *isect, Spectrum *T, bool isSpecular = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     Spectrum Transmittance(const Scene *scene, const RayDifferential &ray,
         const Sample *sample, RNG &rng, MemoryArena &arena) const;
 private:

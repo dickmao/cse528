@@ -246,7 +246,7 @@ static uint32_t GeneratePath(const RayDifferential &r,
 
         // Record information for current path vertex
         v.alpha = alpha;
-        BSDF *bsdf = v.isect.GetBSDF(ray, arena);
+        BSDF *bsdf = v.isect.GetBSDF(ray, arena, -1);
         v.bsdf = bsdf;
         v.wPrev = -ray.d;
 
@@ -375,7 +375,7 @@ Spectrum MetropolisRenderer::Lpath(const Scene *scene,
                  EstimateDirect(scene, this, arena, light, pc, nc, vc.wPrev,
                                 vc.isect.rayEpsilon, time, vc.bsdf, rng,
                                 ls.lightSample, ls.bsdfSample,
-                                BxDFType(BSDF_ALL & ~BSDF_SPECULAR)) / lightPdf;
+                                BxDFType(BSDF_ALL & ~BSDF_SPECULAR), -1) / lightPdf;
             PBRT_MLT_FINISHED_ESTIMATE_DIRECT();
         }
         previousSpecular = vc.specularBounce;
@@ -436,7 +436,7 @@ Spectrum MetropolisRenderer::Lbidir(const Scene *scene,
                  EstimateDirect(scene, this, arena, light, pc, nc, vc.wPrev,
                                 vc.isect.rayEpsilon, time, vc.bsdf, rng,
                                 ls.lightSample, ls.bsdfSample,
-                                BxDFType(BSDF_ALL & ~BSDF_SPECULAR)) / lightPdf;
+                                BxDFType(BSDF_ALL & ~BSDF_SPECULAR), -1) / lightPdf;
             PBRT_MLT_FINISHED_ESTIMATE_DIRECT();
         }
         previousSpecular = vc.specularBounce;
@@ -784,7 +784,7 @@ void MLTTask::Run() {
 
 Spectrum MetropolisRenderer::Li(const Scene *scene, const RayDifferential &ray,
         const Sample *sample, RNG &rng, MemoryArena &arena, Intersection *isect,
-        Spectrum *T) const {
+        Spectrum *T, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Intersection localIsect;
     if (!isect) isect = &localIsect;
     Spectrum Lo = 0.f;

@@ -57,7 +57,12 @@ public:
         bumpMap = bump;
     }
     BSDF *GetBSDF(const DifferentialGeometry &dgGeom, const
-        DifferentialGeometry &dgShading, MemoryArena &arena) const;
+        DifferentialGeometry &dgShading, MemoryArena &arena, int bounceNum, bool isSpecularBounce = false, bool saveTexture2 = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
+
+	float getReflectanceProb() {
+		return -1.0f;
+	}
+
 private:
     // TranslucentMaterial Private Data
     Reference<Texture<Spectrum> > Kd, Ks;

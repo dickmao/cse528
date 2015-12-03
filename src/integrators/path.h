@@ -46,9 +46,25 @@ public:
     // PathIntegrator Public Methods
     Spectrum Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const;
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     void RequestSamples(Sampler *sampler, Sample *sample, const Scene *scene);
     PathIntegrator(int md) { maxDepth = md; }
+	LightSampleOffsets* getLightOffset() {
+		assert(maxDepth >= 1);
+		return &lightSampleOffsets[0];
+	}
+	BSDFSampleOffsets* getBSDFOffset() {
+		assert(maxDepth >= 1);
+		return &bsdfSampleOffsets[0];
+	}
+	int getLightNumOffset() {
+		assert(maxDepth >= 1);
+		return lightNumOffset[0];
+	}
+	BSDFSampleOffsets* getPathOffset() {
+		assert(maxDepth >= 1);
+		return &pathSampleOffsets[0];
+	}
 private:
     // PathIntegrator Private Data
     int maxDepth;

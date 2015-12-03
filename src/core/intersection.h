@@ -49,7 +49,7 @@ struct Intersection {
         shapeId = primitiveId = 0;
         rayEpsilon = 0.f;
     }
-    BSDF *GetBSDF(const RayDifferential &ray, MemoryArena &arena) const;
+    BSDF *GetBSDF(const RayDifferential &ray, MemoryArena &arena, int bounceNum, bool isSpecularBounce = false, bool saveTexture2 = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     BSSRDF *GetBSSRDF(const RayDifferential &ray, MemoryArena &arena) const;
     Spectrum Le(const Vector &wo) const;
 

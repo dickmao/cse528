@@ -55,9 +55,11 @@ public:
     void FullyRefine(vector<Reference<Primitive> > &refined) const;
     virtual const AreaLight *GetAreaLight() const = 0;
     virtual BSDF *GetBSDF(const DifferentialGeometry &dg,
-        const Transform &ObjectToWorld, MemoryArena &arena) const = 0;
+        const Transform &ObjectToWorld, MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const = 0;
     virtual BSSRDF *GetBSSRDF(const DifferentialGeometry &dg,
         const Transform &ObjectToWorld, MemoryArena &arena) const = 0;
+
+	virtual Reference<Material> getMaterial() const = 0;
 
     // Primitive Public Data
     const uint32_t primitiveId;
@@ -81,13 +83,18 @@ public:
                        const Reference<Material> &m, AreaLight *a);
     const AreaLight *GetAreaLight() const;
     BSDF *GetBSDF(const DifferentialGeometry &dg,
-                  const Transform &ObjectToWorld, MemoryArena &arena) const;
+                  const Transform &ObjectToWorld, MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     BSSRDF *GetBSSRDF(const DifferentialGeometry &dg,
                       const Transform &ObjectToWorld, MemoryArena &arena) const;
+
+	Reference<Material> getMaterial() const {
+		return material;
+	}
+	 Reference<Material> material;
 private:
     // GeometricPrimitive Private Data
     Reference<Shape> shape;
-    Reference<Material> material;
+   
     AreaLight *areaLight;
 };
 
@@ -104,7 +111,7 @@ public:
     bool IntersectP(const Ray &r) const;
     const AreaLight *GetAreaLight() const { return NULL; }
     BSDF *GetBSDF(const DifferentialGeometry &dg,
-                  const Transform &ObjectToWorld, MemoryArena &arena) const {
+                  const Transform &ObjectToWorld, MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const {
         return NULL;
     }
     BSSRDF *GetBSSRDF(const DifferentialGeometry &dg,
@@ -114,6 +121,11 @@ public:
     BBox WorldBound() const {
         return WorldToPrimitive.MotionBounds(primitive->WorldBound(), true);
     }
+
+	Reference<Material> getMaterial() const {
+		return NULL;
+	}
+
 private:
     // TransformedPrimitive Private Data
     Reference<Primitive> primitive;
@@ -128,9 +140,13 @@ public:
     // Aggregate Public Methods
     const AreaLight *GetAreaLight() const;
     BSDF *GetBSDF(const DifferentialGeometry &dg,
-                  const Transform &, MemoryArena &) const;
+                  const Transform &, MemoryArena &, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     BSSRDF *GetBSSRDF(const DifferentialGeometry &dg,
                   const Transform &, MemoryArena &) const;
+
+	Reference<Material> getMaterial() const{
+		return NULL;
+	}
 };
 
 

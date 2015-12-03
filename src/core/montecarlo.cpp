@@ -36,6 +36,7 @@
 #include "geometry.h"
 #include "shape.h"
 #include "volume.h"
+#include "../SampleWriter/SampleWriter.h" // MOD
 
 // Sampling Local Definitions
 static const int primes[] = {
@@ -232,8 +233,17 @@ void LDPixelSample(int xPos, int yPos, float shutterOpen,
 
     // Initialize _samples_ with computed sample values
     for (int i = 0; i < nPixelSamples; ++i) {
+		
         samples[i].imageX = xPos + imageSamples[2*i];
         samples[i].imageY = yPos + imageSamples[2*i+1];
+
+		if(((size_t) samples[i].imageX) == xPos + 1) {
+			samples[i].imageX -= SAMPLE_EPSILON;
+		} 
+		if(((size_t) samples[i].imageY) == yPos + 1) {
+			samples[i].imageY -= SAMPLE_EPSILON;
+		}
+
         samples[i].time = Lerp(timeSamples[i], shutterOpen, shutterClose);
         samples[i].lensU = lensSamples[2*i];
         samples[i].lensV = lensSamples[2*i+1];

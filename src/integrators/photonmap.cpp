@@ -443,7 +443,7 @@ void PhotonShootingTask::Run() {
                     ++nIntersections;
                     // Handle photon/surface intersection
                     alpha *= renderer->Transmittance(scene, photonRay, NULL, rng, arena);
-                    BSDF *photonBSDF = photonIsect.GetBSDF(photonRay, arena);
+                    BSDF *photonBSDF = photonIsect.GetBSDF(photonRay, arena, -1);
                     BxDFType specularType = BxDFType(BSDF_REFLECTION |
                                             BSDF_TRANSMISSION | BSDF_SPECULAR);
                     bool hasNonSpecular = (photonBSDF->NumComponents() >
@@ -623,14 +623,14 @@ void ComputeRadianceTask::Run() {
 
 Spectrum PhotonIntegrator::Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const {
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Spectrum L(0.);
     Vector wo = -ray.d;
     // Compute emitted light if ray hit an area light source
     L += isect.Le(wo);
 
     // Evaluate BSDF at hit point
-    BSDF *bsdf = isect.GetBSDF(ray, arena);
+    BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
     const Point &p = bsdf->dgShading.p;
     const Normal &n = bsdf->dgShading.nn;
     L += UniformSampleAllLights(scene, renderer, arena, p, n,

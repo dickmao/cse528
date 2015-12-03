@@ -36,6 +36,8 @@
 #include "paramset.h"
 #include "montecarlo.h"
 
+extern int numOfLightSamples;
+
 // DiffuseAreaLight Method Definitions
 DiffuseAreaLight::~DiffuseAreaLight() {
     delete shapeSet;
@@ -61,6 +63,7 @@ AreaLight *CreateDiffuseAreaLight(const Transform &light2world, const ParamSet &
     Spectrum L = paramSet.FindOneSpectrum("L", Spectrum(1.0));
     Spectrum sc = paramSet.FindOneSpectrum("scale", Spectrum(1.0));
     int nSamples = paramSet.FindOneInt("nsamples", 1);
+	nSamples = numOfLightSamples; // MOD: Steve
     if (PbrtOptions.quickRender) nSamples = max(1, nSamples / 4);
     return new DiffuseAreaLight(light2world, L * sc, nSamples, shape);
 }

@@ -106,14 +106,14 @@ void IGIIntegrator::Preprocess(const Scene *scene, const Camera *camera,
                                              lightSampDir[2*sampOffset+1],
                                              camera->shutterOpen, &ray, &Nl, &pdf);
             if (pdf == 0.f || alpha.IsBlack()) continue;
-            alpha *= AbsDot(Nl, ray.d) / (pdf * lightPdf);
+            alpha /= pdf * lightPdf;
             Intersection isect;
             while (scene->Intersect(ray, &isect) && !alpha.IsBlack()) {
                 // Create virtual light and sample new ray for path
                 alpha *= renderer->Transmittance(scene, RayDifferential(ray), NULL,
                                                  rng, arena);
                 Vector wo = -ray.d;
-                BSDF *bsdf = isect.GetBSDF(ray, arena);
+                BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
 
                 // Create virtual light at ray intersection point
                 Spectrum contrib = alpha * bsdf->rho(wo, rng) / M_PI;
@@ -145,14 +145,14 @@ void IGIIntegrator::Preprocess(const Scene *scene, const Camera *camera,
 
 Spectrum IGIIntegrator::Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const {
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Spectrum L(0.);
     Vector wo = -ray.d;
     // Compute emitted light if ray hit an area light source
     L += isect.Le(wo);
 
     // Evaluate BSDF at hit point
-    BSDF *bsdf = isect.GetBSDF(ray, arena);
+    BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
     const Point &p = bsdf->dgShading.p;
     const Normal &n = bsdf->dgShading.nn;
     L += UniformSampleAllLights(scene, renderer, arena, p, n,

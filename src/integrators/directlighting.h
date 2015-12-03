@@ -50,8 +50,20 @@ public:
     ~DirectLightingIntegrator();
     Spectrum Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const;
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     void RequestSamples(Sampler *sampler, Sample *sample, const Scene *scene);
+	LightSampleOffsets* getLightOffset() {
+		return lightSampleOffsets;
+	}
+	BSDFSampleOffsets* getBSDFOffset() {
+		return bsdfSampleOffsets;
+	}
+	int getLightNumOffset() {
+		return lightNumOffset;
+	}
+	BSDFSampleOffsets* getPathOffset() {
+		return NULL;
+	}
 private:
     // DirectLightingIntegrator Private Data
     LightStrategy strategy;

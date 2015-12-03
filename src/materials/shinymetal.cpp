@@ -52,7 +52,7 @@ static inline Spectrum FresnelApproxK(const Spectrum &Fr) {
 // ShinyMetalMaterial Method Definitions
 BSDF *ShinyMetalMaterial::GetBSDF(const DifferentialGeometry &dgGeom, 
                                   const DifferentialGeometry &dgShading,
-                                  MemoryArena &arena) const {
+                                  MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     // Allocate _BSDF_, possibly doing bump-mapping with _bumpMap_
     DifferentialGeometry dgs;
     if (bumpMap)

@@ -155,7 +155,7 @@ public:
     // BSDF Public Methods
     Spectrum Sample_f(const Vector &wo, Vector *wi, const BSDFSample &bsdfSample,
                       float *pdf, BxDFType flags = BSDF_ALL,
-                      BxDFType *sampledType = NULL) const;
+                      BxDFType *sampledType = NULL, Vector* diffRay = NULL, float reflectProb = -1.0f) const;
     float Pdf(const Vector &wo, const Vector &wi,
               BxDFType flags = BSDF_ALL) const;
     BSDF(const DifferentialGeometry &dgs, const Normal &ngeom,

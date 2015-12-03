@@ -85,7 +85,6 @@ ImageTexture<Tmemory, Treturn>::GetTexture(const string &filename,
     return ret;
 }
 
-
 template <typename Tmemory, typename Treturn>
     std::map<TexInfo,
              MIPMap<Tmemory> *> ImageTexture<Tmemory, Treturn>::textures;
@@ -174,5 +173,4 @@ ImageTexture<RGBSpectrum, Spectrum> *CreateImageSpectrumTexture(const Transform 
     return new ImageTexture<RGBSpectrum, Spectrum>(map, tp.FindFilename("filename"),
         trilerp, maxAniso, wrapMode, scale, gamma);
 }
-
 

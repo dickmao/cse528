@@ -121,7 +121,7 @@ void AggregateTest::Render(const Scene *scene) {
 
 Spectrum AggregateTest::Li(const Scene *scene, const RayDifferential &ray,
         const Sample *sample, RNG &rng, MemoryArena &arena, Intersection *isect,
-        Spectrum *T) const {
+        Spectrum *T, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     return 0.f;
 }
 

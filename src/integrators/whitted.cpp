@@ -40,12 +40,12 @@
 Spectrum WhittedIntegrator::Li(const Scene *scene,
         const Renderer *renderer, const RayDifferential &ray,
         const Intersection &isect, const Sample *sample, RNG &rng,
-        MemoryArena &arena) const {
+        MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Spectrum L(0.);
     // Compute emitted and reflected light at ray intersection point
 
     // Evaluate BSDF at hit point
-    BSDF *bsdf = isect.GetBSDF(ray, arena);
+    BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
 
     // Initialize common variables for Whitted integrator
     const Point &p = bsdf->dgShading.p;

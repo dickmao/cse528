@@ -1,5 +1,10 @@
-Film "image"
-#	"integer xresolution" [128] "integer yresolution" [128] 
+Film "smooth"
+    "float  gamma"        [0.2]
+    "integer xresolution" [512] "integer yresolution" [512]
+    "string filename"     ["bunny.exr"]
+
+Sampler "bandwidth" "integer pixelsamples" [8] "integer niterations" [1]
+
 LookAt 0 .2 .2    -.02 .1 0  0 1 0
 Camera "perspective" "float fov" [60]
 

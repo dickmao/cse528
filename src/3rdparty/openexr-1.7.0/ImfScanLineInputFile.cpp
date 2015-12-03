@@ -58,7 +58,6 @@
 #include <assert.h>
 #include <algorithm>
 
-
 namespace Imf {
 
 using Imath::Box2i;

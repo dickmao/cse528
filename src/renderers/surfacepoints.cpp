@@ -43,7 +43,7 @@
 #include "intersection.h"
 #include "montecarlo.h"
 #include "shapes/sphere.h"
-#if defined(PBRT_IS_WINDOWS) || defined(PBRT_IS_LINUX)|| defined(PBRT_IS_OPENBSD)
+#if defined(PBRT_IS_WINDOWS) || defined(PBRT_IS_LINUX)
 #include <errno.h>
 #else
 #include <sys/errno.h>
@@ -100,7 +100,7 @@ struct PoissonCheck {
 // SurfacePointsRenderer Method Definitions
 Spectrum SurfacePointsRenderer::Li(const Scene *scene,
     const RayDifferential &ray, const Sample *sample, RNG &rng, MemoryArena &arena,
-    Intersection *isect, Spectrum *T) const {
+    Intersection *isect, Spectrum *T, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     return 0.f;
 }
 

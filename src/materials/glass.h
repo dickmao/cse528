@@ -43,20 +43,29 @@
 // GlassMaterial Declarations
 class GlassMaterial : public Material {
 public:
+
     // GlassMaterial Public Methods
     GlassMaterial(Reference<Texture<Spectrum> > r, Reference<Texture<Spectrum> > t,
-            Reference<Texture<float> > i, Reference<Texture<float> > bump) {
+            Reference<Texture<float> > i, Reference<Texture<float> > bump, float prob) {
         Kr = r;
         Kt = t;
         index = i;
         bumpMap = bump;
+		reflectanceProb = prob;
     }
-    BSDF *GetBSDF(const DifferentialGeometry &dgGeom, const DifferentialGeometry &dgShading, MemoryArena &arena) const;
+
+    BSDF *GetBSDF(const DifferentialGeometry &dgGeom, const DifferentialGeometry &dgShading, MemoryArena &arena, int bounceNum, bool isSpecularBounce = false, bool saveTexture2 = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
+
+	float getReflectanceProb() {
+		return reflectanceProb;
+	}
+
 private:
     // GlassMaterial Private Data
     Reference<Texture<Spectrum> > Kr, Kt;
     Reference<Texture<float> > index;
     Reference<Texture<float> > bumpMap;
+	float reflectanceProb;
 };
 
 

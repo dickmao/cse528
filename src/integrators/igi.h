@@ -61,7 +61,7 @@ public:
     ~IGIIntegrator();
     Spectrum Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const;
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
     void RequestSamples(Sampler *sampler, Sample *sample, const Scene *scene);
     void Preprocess(const Scene *, const Camera *, const Renderer *);
     IGIIntegrator(uint32_t nl, uint32_t ns, float rrt, int maxd, float gl, int ng) {
@@ -75,6 +75,18 @@ public:
         lightSampleOffsets = NULL;
         bsdfSampleOffsets = NULL;
     }
+	LightSampleOffsets* getLightOffset() {
+		return NULL;
+	}
+	BSDFSampleOffsets* getBSDFOffset() {
+		return NULL;
+	}
+	int getLightNumOffset() {
+		return -1;
+	}
+	BSDFSampleOffsets* getPathOffset() {
+		return NULL;
+	}
 private:
     // IGIIntegrator Private Data
 

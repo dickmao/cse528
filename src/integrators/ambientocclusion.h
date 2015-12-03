@@ -46,7 +46,19 @@ public:
     AmbientOcclusionIntegrator(int ns, float md) { nSamples = RoundUpPow2(ns); maxDist = md; }
     Spectrum Li(const Scene *scene, const Renderer *renderer,
         const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const;
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular = false, float rWeight = 1.0f, float gWeight = 1.0f, float bWeight = 1.0f) const;
+	LightSampleOffsets* getLightOffset() {
+		return NULL;
+	}
+	BSDFSampleOffsets* getBSDFOffset() {
+		return NULL;
+	}
+	int getLightNumOffset() {
+		return -1;
+	}
+	BSDFSampleOffsets* getPathOffset() {
+		return NULL;
+	}
 private:
     int nSamples;
     float maxDist;

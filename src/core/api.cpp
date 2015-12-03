@@ -99,6 +99,7 @@
 #include "samplers/lowdiscrepancy.h"
 #include "samplers/random.h"
 #include "samplers/stratified.h"
+#include "samplers/bandwidth.h"
 #include "shapes/cone.h"
 #include "shapes/cylinder.h"
 #include "shapes/disk.h"
@@ -130,6 +131,8 @@
  #define snprintf _snprintf
  #endif
 using std::map;
+
+bool isRandomSampler;
 
 // API Global Variables
 Options PbrtOptions;
@@ -629,12 +632,13 @@ Sampler *MakeSampler(const string &name,
         sampler = CreateHaltonSampler(paramSet, film, camera);
     else if (name == "lowdiscrepancy")
         sampler = CreateLowDiscrepancySampler(paramSet, film, camera);
-    else if (name == "random")
+    else if (name == "random") {
         sampler = CreateRandomSampler(paramSet, film, camera);
-    else if (name == "stratified")
+	isRandomSampler = true;
+    } else if (name == "stratified")
         sampler = CreateStratifiedSampler(paramSet, film, camera);
     else
-        Warning("Sampler \"%s\" unknown.", name.c_str());
+	sampler = CreateBandwidthSampler(paramSet, film, camera);
     paramSet.ReportUnused();
     return sampler;
 }
@@ -663,10 +667,7 @@ Filter *MakeFilter(const string &name,
 Film *MakeFilm(const string &name,
     const ParamSet &paramSet, Filter *filter) {
     Film *film = NULL;
-    if (name == "image")
-        film = CreateImageFilm(paramSet, filter);
-    else
-        Warning("Film \"%s\" unknown.", name.c_str());
+    film = CreateSmoothFilm(paramSet, filter);
     paramSet.ReportUnused();
     return film;
 }
@@ -1249,7 +1250,8 @@ Renderer *RenderOptions::MakeRenderer() const {
                     RendererName.c_str());
         bool visIds = RendererParams.FindOneBool("visualizeobjectids", false);
         RendererParams.ReportUnused();
-        Sampler *sampler = MakeSampler(SamplerName, SamplerParams, camera->film, camera);
+	//        Sampler *sampler = MakeSampler(SamplerName, SamplerParams, camera->film, camera);
+	BandwidthSampler *sampler = CreateBandwidthSampler(SamplerParams, camera->film, camera);
         if (!sampler) Severe("Unable to create sampler.");
         // Create surface and volume integrators
         SurfaceIntegrator *surfaceIntegrator = MakeSurfaceIntegrator(SurfIntegratorName,
@@ -1259,7 +1261,7 @@ Renderer *RenderOptions::MakeRenderer() const {
             VolIntegratorParams);
         if (!volumeIntegrator) Severe("Unable to create volume integrator.");
         renderer = new SamplerRenderer(sampler, camera, surfaceIntegrator,
-                                       volumeIntegrator, visIds);
+                                       volumeIntegrator, visIds, RendererParams);
         // Warn if no light sources are defined
         if (lights.size() == 0)
             Warning("No light sources defined in scene; "

@@ -36,6 +36,8 @@
 #include "montecarlo.h"
 #include "camera.h"
 
+//extern int pbrtSamplesPerPixel;
+
 RandomSampler::RandomSampler(int xstart, int xend,
         int ystart, int yend, int ns, float sopen, float sclose)
     : Sampler(xstart, xend, ystart, yend, ns, sopen, sclose) {
@@ -95,6 +97,14 @@ int RandomSampler::GetMoreSamples(Sample *sample, RNG &rng) {
     // Return next \mono{RandomSampler} sample point
     sample->imageX = imageSamples[2*samplePos];
     sample->imageY = imageSamples[2*samplePos+1];
+
+	if(((size_t) sample->imageX) == xPos + 1) {
+		sample->imageX -= SAMPLE_EPSILON;
+	} 
+	if(((size_t) sample->imageY) == yPos + 1) {
+		sample->imageY -= SAMPLE_EPSILON;
+	}
+
     sample->lensU = lensSamples[2*samplePos];
     sample->lensV = lensSamples[2*samplePos+1];
     sample->time = Lerp(timeSamples[samplePos], shutterOpen, shutterClose);
@@ -114,6 +124,9 @@ int RandomSampler::GetMoreSamples(Sample *sample, RNG &rng) {
 Sampler *CreateRandomSampler(const ParamSet &params,
                        const Film *film, const Camera *camera) {
     int ns = params.FindOneInt("pixelsamples", 4);
+	//if(pbrtSamplesPerPixel > 0) {
+	//	ns = pbrtSamplesPerPixel;
+	//}
     int xstart, xend, ystart, yend;
     film->GetSampleExtent(&xstart, &xend, &ystart, &yend);
     return new RandomSampler(xstart, xend, ystart, yend, ns,

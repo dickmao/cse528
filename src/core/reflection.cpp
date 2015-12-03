@@ -521,7 +521,7 @@ BSDFSample::BSDFSample(const Sample *sample,
 
 Spectrum BSDF::Sample_f(const Vector &woW, Vector *wiW,
                         const BSDFSample &bsdfSample, float *pdf,
-                        BxDFType flags, BxDFType *sampledType) const {
+                        BxDFType flags, BxDFType *sampledType, Vector* diffRay, float reflectProb) const {
     PBRT_STARTED_BSDF_SAMPLE();
     // Choose which _BxDF_ to sample
     int matchingComps = NumComponents(flags);
@@ -531,8 +531,38 @@ Spectrum BSDF::Sample_f(const Vector &woW, Vector *wiW,
         PBRT_FINISHED_BSDF_SAMPLE();
         return Spectrum(0.f);
     }
-    int which = min(Floor2Int(bsdfSample.uComponent * matchingComps),
+	
+    int which;
+	if(reflectProb == -1) {
+
+		which = min(Floor2Int(bsdfSample.uComponent * matchingComps),
                     matchingComps-1);
+
+	} else {
+
+		BxDFType tempFlag;
+		if(bsdfSample.uComponent > reflectProb) {
+
+			tempFlag = BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR);
+			
+		} else {
+
+			tempFlag = BxDFType(BSDF_REFLECTION | BSDF_SPECULAR);
+
+		}
+
+		for (int i = 0; i < nBxDFs; ++i) {
+			if (bxdfs[i]->MatchesFlags(tempFlag)) {
+				which = i;
+				break;
+			}
+			if(i == (nBxDFs - 1)) {
+				assert(0);
+			}
+		}
+
+	}
+
     BxDF *bxdf = NULL;
     int count = which;
     for (int i = 0; i < nBxDFs; ++i)
@@ -548,6 +578,7 @@ Spectrum BSDF::Sample_f(const Vector &woW, Vector *wiW,
     *pdf = 0.f;
     Spectrum f = bxdf->Sample_f(wo, &wi, bsdfSample.uDir[0],
                                 bsdfSample.uDir[1], pdf);
+
     if (*pdf == 0.f)
     {
         if (sampledType) *sampledType = BxDFType(0);
@@ -556,6 +587,18 @@ Spectrum BSDF::Sample_f(const Vector &woW, Vector *wiW,
     }
     if (sampledType) *sampledType = bxdf->type;
     *wiW = LocalToWorld(wi);
+
+	Vector woTemp = wo;
+	woTemp.x *= -1;
+	woTemp.y *= -1;
+	Vector woWTemp = LocalToWorld(woTemp);
+
+	if(diffRay != NULL) {
+		diffRay->x = wiW->x - woWTemp.x; 
+		diffRay->y = wiW->y - woWTemp.y;
+		diffRay->z = wiW->z - woWTemp.z;
+	}
+
 
     // Compute overall PDF with all matching _BxDF_s
     if (!(bxdf->type & BSDF_SPECULAR) && matchingComps > 1)

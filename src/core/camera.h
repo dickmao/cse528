@@ -52,6 +52,10 @@ public:
                               Ray *ray) const = 0;
     virtual float GenerateRayDifferential(const CameraSample &sample, RayDifferential *rd) const;
 
+	virtual float getFocalDistance() = 0;
+	virtual float getLensRadius() = 0;
+	virtual float getFOV() = 0;
+
     // Camera Public Data
     AnimatedTransform CameraToWorld;
     const float shutterOpen, shutterClose;
@@ -65,6 +69,17 @@ public:
     ProjectiveCamera(const AnimatedTransform &cam2world,
         const Transform &proj, const float screenWindow[4],
         float sopen, float sclose, float lensr, float focald, Film *film);
+
+	float getFocalDistance() {
+		return focalDistance;
+	}
+
+	float getLensRadius() {
+		return lensRadius;
+	}
+	
+	virtual float getFOV() = 0;
+
 protected:
     // ProjectiveCamera Protected Data
     Transform CameraToScreen, RasterToCamera;

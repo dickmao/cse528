@@ -35,6 +35,9 @@
 #include "samplers/lowdiscrepancy.h"
 #include "camera.h"
 #include "montecarlo.h"
+#include <iostream>
+
+extern int pbrtSamplesPerPixel;
 
 // LDSampler Method Definitions
 LDSampler::LDSampler(int xstart, int xend, int ystart, int yend, int ps,
@@ -85,6 +88,9 @@ LDSampler *CreateLowDiscrepancySampler(const ParamSet &params, const Film *film,
     int xstart, xend, ystart, yend;
     film->GetSampleExtent(&xstart, &xend, &ystart, &yend);
     int nsamp = params.FindOneInt("pixelsamples", 4);
+	if(pbrtSamplesPerPixel > 0) {
+		nsamp = pbrtSamplesPerPixel;
+	}
     if (PbrtOptions.quickRender) nsamp = 1;
     return new LDSampler(xstart, xend, ystart, yend, nsamp,
         camera->shutterOpen, camera->shutterClose);

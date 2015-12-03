@@ -39,11 +39,12 @@
 
 // Intersection Method Definitions
 BSDF *Intersection::GetBSDF(const RayDifferential &ray,
-                            MemoryArena &arena) const {
+                            MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     PBRT_STARTED_BSDF_SHADING(const_cast<RayDifferential *>(&ray));
     dg.ComputeDifferentials(ray);
-    BSDF *bsdf = primitive->GetBSDF(dg, ObjectToWorld, arena);
+    BSDF *bsdf = primitive->GetBSDF(dg, ObjectToWorld, arena, bounceNum, isSpecularBounce, saveTexture2, rWeight, gWeight, bWeight);
     PBRT_FINISHED_BSDF_SHADING(const_cast<RayDifferential *>(&ray), bsdf);
+
     return bsdf;
 }
 

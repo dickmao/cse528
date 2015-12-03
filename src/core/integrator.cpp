@@ -36,6 +36,7 @@
 #include "scene.h"
 #include "intersection.h"
 #include "montecarlo.h"
+#include "../SampleWriter/SampleWriter.h" // MOD
 
 // Integrator Method Definitions
 Integrator::~Integrator() {
@@ -49,12 +50,26 @@ Spectrum UniformSampleAllLights(const Scene *scene,
         const Normal &n, const Vector &wo, float rayEpsilon,
         float time, BSDF *bsdf, const Sample *sample, RNG &rng,
         const LightSampleOffsets *lightSampleOffsets,
-        const BSDFSampleOffsets *bsdfSampleOffsets) {
+        const BSDFSampleOffsets *bsdfSampleOffsets, bool isSpecular) {
     Spectrum L(0.);
+
+	int indexOfNonPointLightSource = -1;
+	for (uint32_t i = 0; i < scene->lights.size(); ++i) {
+
+		Light* light = scene->lights[i];
+		if(!light->IsDeltaLight()) {
+			assert(indexOfNonPointLightSource == -1);
+			indexOfNonPointLightSource = i;
+		}
+
+	}
+
     for (uint32_t i = 0; i < scene->lights.size(); ++i) {
         Light *light = scene->lights[i];
         int nSamples = lightSampleOffsets ?
                        lightSampleOffsets[i].nSamples : 1;
+
+		assert(nSamples == 1);
         // Estimate direct lighting from _light_ samples
         Spectrum Ld(0.);
         for (int j = 0; j < nSamples; ++j) {
@@ -69,9 +84,21 @@ Spectrum UniformSampleAllLights(const Scene *scene,
                 lightSample = LightSample(rng);
                 bsdfSample = BSDFSample(rng);
             }
-            Ld += EstimateDirect(scene, renderer, arena, light, p, n, wo,
-                rayEpsilon, time, bsdf, rng, lightSample, bsdfSample,
-                BxDFType(BSDF_ALL & ~BSDF_SPECULAR));
+			
+			int flag = -1;
+			if(!isSpecular && i == indexOfNonPointLightSource) {
+				flag = 0;
+			} 
+
+			if(scene->lights.size() == 1) {
+				Ld += EstimateDirect(scene, renderer, arena, light, p, n, wo,
+					rayEpsilon, time, bsdf, rng, lightSample, bsdfSample,
+					BxDFType(BSDF_ALL & ~BSDF_SPECULAR), flag);
+			} else {
+				 Ld += EstimateDirect(scene, renderer, arena, light, p, n, wo,
+					rayEpsilon, time, bsdf, rng, lightSample, bsdfSample,
+					BxDFType(BSDF_ALL & ~BSDF_SPECULAR), flag);
+			}
         }
         L += Ld / nSamples;
     }
@@ -84,9 +111,10 @@ Spectrum UniformSampleOneLight(const Scene *scene,
         const Normal &n, const Vector &wo, float rayEpsilon, float time,
         BSDF *bsdf, const Sample *sample, RNG &rng, int lightNumOffset,
         const LightSampleOffsets *lightSampleOffset,
-        const BSDFSampleOffsets *bsdfSampleOffset) {
+        const BSDFSampleOffsets *bsdfSampleOffset, int bounceNum, bool isSpecular) {
     // Randomly choose a single light to sample, _light_
     int nLights = int(scene->lights.size());
+	//printf("Num of lights %d\n", nLights);
     if (nLights == 0) return Spectrum(0.);
     int lightNum;
     if (lightNumOffset != -1)
@@ -107,10 +135,18 @@ Spectrum UniformSampleOneLight(const Scene *scene,
         lightSample = LightSample(rng);
         bsdfSample = BSDFSample(rng);
     }
-    return (float)nLights *
+
+	if(isSpecular) {
+		assert(bounceNum == -1);
+	}
+	//printf("isSpecular %d, bounceNum %d\n", isSpecular, bounceNum);
+    Spectrum temp = (float)nLights *
         EstimateDirect(scene, renderer, arena, light, p, n, wo,
                        rayEpsilon, time, bsdf, rng, lightSample,
-                       bsdfSample, BxDFType(BSDF_ALL & ~BSDF_SPECULAR));
+                       bsdfSample, BxDFType(BSDF_ALL & ~BSDF_SPECULAR), bounceNum);
+
+	return temp;
+
 }
 
 
@@ -118,7 +154,7 @@ Spectrum EstimateDirect(const Scene *scene, const Renderer *renderer,
         MemoryArena &arena, const Light *light, const Point &p,
         const Normal &n, const Vector &wo, float rayEpsilon, float time,
         const BSDF *bsdf, RNG &rng, const LightSample &lightSample,
-        const BSDFSample &bsdfSample, BxDFType flags) {
+        const BSDFSample &bsdfSample, BxDFType flags, int bounceNum) {
     Spectrum Ld(0.);
     // Sample light source with multiple importance sampling
     Vector wi;
@@ -126,57 +162,79 @@ Spectrum EstimateDirect(const Scene *scene, const Renderer *renderer,
     VisibilityTester visibility;
     Spectrum Li = light->Sample_L(p, rayEpsilon, lightSample, time,
                                   &wi, &lightPdf, &visibility);
-    if (lightPdf > 0. && !Li.IsBlack()) {
-        Spectrum f = bsdf->f(wo, wi, flags);
-        if (!f.IsBlack() && visibility.Unoccluded(scene)) {
-            // Add light's contribution to reflected radiance
-            Li *= visibility.Transmittance(scene, renderer, NULL, rng, arena);
-            if (light->IsDeltaLight())
-                Ld += f * Li * (AbsDot(wi, n) / lightPdf);
-            else {
-                bsdfPdf = bsdf->Pdf(wo, wi, flags);
-                float weight = PowerHeuristic(1, lightPdf, 1, bsdfPdf);
-                Ld += f * Li * (AbsDot(wi, n) * weight / lightPdf);
-            }
-        }
-    }
 
-    // Sample BSDF with multiple importance sampling
-    if (!light->IsDeltaLight()) {
-        BxDFType sampledType;
-        Spectrum f = bsdf->Sample_f(wo, &wi, bsdfSample, &bsdfPdf, flags,
-                                    &sampledType);
-        if (!f.IsBlack() && bsdfPdf > 0.) {
-            float weight = 1.f;
-            if (!(sampledType & BSDF_SPECULAR)) {
-                lightPdf = light->Pdf(p, wi);
-                if (lightPdf == 0.)
-                    return Ld;
-                weight = PowerHeuristic(1, bsdfPdf, 1, lightPdf);
-            }
-            // Add light contribution from BSDF sampling
-            Intersection lightIsect;
-            Spectrum Li(0.f);
-            RayDifferential ray(p, wi, rayEpsilon, INFINITY, time);
-            if (scene->Intersect(ray, &lightIsect)) {
-                if (lightIsect.primitive->GetAreaLight() == light)
-                    Li = lightIsect.Le(-wi);
-            }
-            else
-                Li = light->Le(ray);
-            if (!Li.IsBlack()) {
-                Li *= renderer->Transmittance(scene, ray, NULL, rng, arena);
-                Ld += f * Li * AbsDot(wi, n) * weight / bsdfPdf;
-            }
-        }
-    }
+	#if SAVE_SAMPLES
+	 
+		if(bounceNum == 0) {
+
+			SampleWriter::setRandomParameter((size_t) arena.getX(), (size_t) arena.getY(), arena.getSampleNum(), lightSample.uPos[0], LIGHT_1_OFFSET);
+			SampleWriter::setRandomParameter((size_t) arena.getX(), (size_t) arena.getY(), arena.getSampleNum(), lightSample.uPos[1], LIGHT_2_OFFSET);
+		}
+
+	#endif
+
+		if (lightPdf > 0. && !Li.IsBlack()) {
+			Spectrum f = bsdf->f(wo, wi, flags);
+        
+			if (!f.IsBlack() && visibility.Unoccluded(scene)) {
+
+				// Add light's contribution to reflected radiance
+				Li *= visibility.Transmittance(scene, renderer, NULL, rng, arena);
+				Spectrum temp;
+				if (light->IsDeltaLight())
+					temp += f * Li * (AbsDot(wi, n) / lightPdf);
+				else {
+					bsdfPdf = bsdf->Pdf(wo, wi, flags);
+					float weight = PowerHeuristic(1, lightPdf, 1, bsdfPdf);
+					temp += f * Li * (AbsDot(wi, n) * weight / lightPdf);
+				}
+				Ld += temp;
+
+			}
+		}
+
+
+		// Sample BSDF with multiple importance sampling
+		if (!light->IsDeltaLight()) {
+			BxDFType sampledType;
+			Spectrum f = bsdf->Sample_f(wo, &wi, bsdfSample, &bsdfPdf, flags,
+										&sampledType);
+	
+			if (!f.IsBlack() && bsdfPdf > 0.) {
+				float weight = 1.f;
+				if (!(sampledType & BSDF_SPECULAR)) {
+					lightPdf = light->Pdf(p, wi);
+					if (lightPdf == 0.) {
+						return Ld;
+					}
+					weight = PowerHeuristic(1, bsdfPdf, 1, lightPdf);
+				}
+				// Add light contribution from BSDF sampling
+				Intersection lightIsect;
+				Spectrum Li(0.f);
+				RayDifferential ray(p, wi, rayEpsilon, INFINITY, time);
+				if (scene->Intersect(ray, &lightIsect)) {
+					if (lightIsect.primitive->GetAreaLight() == light)
+						Li = lightIsect.Le(-wi);
+				}
+				else
+					Li = light->Le(ray);
+				if (!Li.IsBlack()) {
+					Li *= renderer->Transmittance(scene, ray, NULL, rng, arena);
+					Spectrum temp = f * Li * AbsDot(wi, n) * weight / bsdfPdf;
+					Ld += temp;
+				}
+			}
+		}
+
+
     return Ld;
 }
 
 
 Spectrum SpecularReflect(const RayDifferential &ray, BSDF *bsdf,
         RNG &rng, const Intersection &isect, const Renderer *renderer,
-        const Scene *scene, const Sample *sample, MemoryArena &arena) {
+        const Scene *scene, const Sample *sample, MemoryArena &arena, float rWeight, float gWeight, float bWeight) {
     Vector wo = -ray.d, wi;
     float pdf;
     const Point &p = bsdf->dgShading.p;
@@ -205,7 +263,11 @@ Spectrum SpecularReflect(const RayDifferential &ray, BSDF *bsdf,
                                                      dDNdy * n);
         }
         PBRT_STARTED_SPECULAR_REFLECTION_RAY(const_cast<RayDifferential *>(&rd));
-        Spectrum Li = renderer->Li(scene, rd, sample, rng, arena);
+		//Intersection tempIsect;
+		Spectrum weight = f*AbsDot(wi, n);
+		float weightRGB[NUM_OF_COLORS];
+		weight.ToRGB(weightRGB);
+        Spectrum Li = renderer->Li(scene, rd, sample, rng, arena, NULL, NULL, true, rWeight*weightRGB[0], gWeight*weightRGB[1], bWeight*weightRGB[2]);
         L = f * Li * AbsDot(wi, n) / pdf;
         PBRT_FINISHED_SPECULAR_REFLECTION_RAY(const_cast<RayDifferential *>(&rd));
     }
@@ -215,7 +277,7 @@ Spectrum SpecularReflect(const RayDifferential &ray, BSDF *bsdf,
 
 Spectrum SpecularTransmit(const RayDifferential &ray, BSDF *bsdf,
         RNG &rng, const Intersection &isect, const Renderer *renderer,
-        const Scene *scene, const Sample *sample, MemoryArena &arena) {
+        const Scene *scene, const Sample *sample, MemoryArena &arena, float rWeight, float gWeight, float bWeight) {
     Vector wo = -ray.d, wi;
     float pdf;
     const Point &p = bsdf->dgShading.p;
@@ -250,7 +312,10 @@ Spectrum SpecularTransmit(const RayDifferential &ray, BSDF *bsdf,
             rd.ryDirection = wi + eta * dwody - Vector(mu * dndy + dmudy * n);
         }
         PBRT_STARTED_SPECULAR_REFRACTION_RAY(const_cast<RayDifferential *>(&rd));
-        Spectrum Li = renderer->Li(scene, rd, sample, rng, arena);
+		Spectrum weight = f*AbsDot(wi, n);
+		float weightRGB[NUM_OF_COLORS];
+		weight.ToRGB(weightRGB);
+        Spectrum Li = renderer->Li(scene, rd, sample, rng, arena, NULL, NULL, true, rWeight * weightRGB[0], gWeight * weightRGB[1], bWeight * weightRGB[2]);
         L = f * Li * AbsDot(wi, n) / pdf;
         PBRT_FINISHED_SPECULAR_REFRACTION_RAY(const_cast<RayDifferential *>(&rd));
     }

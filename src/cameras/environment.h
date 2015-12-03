@@ -49,6 +49,20 @@ public:
         : Camera(cam2world, sopen, sclose, film) {
     }
     float GenerateRay(const CameraSample &sample, Ray *) const;
+
+
+	float getFOV() {
+		return -1;
+	}
+
+	float getFocalDistance() {
+		return -1;
+	}
+
+	float getLensRadius() {
+		return -1;
+	}
+
 };
 
 

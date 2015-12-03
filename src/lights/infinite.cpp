@@ -37,6 +37,9 @@
 #include "montecarlo.h"
 #include "paramset.h"
 #include "imageio.h"
+#include "../SampleWriter/SampleWriter.h" // MOD
+
+int numOfLightSamples;
 
 // InfiniteAreaLight Utility Classes
 struct InfiniteAreaCube {
@@ -187,6 +190,7 @@ InfiniteAreaLight *CreateInfiniteLight(const Transform &light2world,
     Spectrum sc = paramSet.FindOneSpectrum("scale", Spectrum(1.0));
     string texmap = paramSet.FindOneFilename("mapname", "");
     int nSamples = paramSet.FindOneInt("nsamples", 1);
+	nSamples = numOfLightSamples; // MOD: Steve
     if (PbrtOptions.quickRender) nSamples = max(1, nSamples / 4);
     return new InfiniteAreaLight(light2world, L * sc, nSamples, texmap);
 }

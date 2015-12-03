@@ -49,6 +49,11 @@ public:
         float sopen, float sclose, float lensr, float focald, Film *film);
     float GenerateRay(const CameraSample &sample, Ray *) const;
     float GenerateRayDifferential(const CameraSample &sample, RayDifferential *) const;
+
+	float getFOV() {
+		return -1;
+	}
+
 private:
     // OrthoCamera Private Data
     Vector dxCamera, dyCamera;

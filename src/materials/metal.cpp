@@ -49,7 +49,7 @@ MetalMaterial::MetalMaterial(Reference<Texture<Spectrum> > et,
 
 
 BSDF *MetalMaterial::GetBSDF(const DifferentialGeometry &dgGeom,
-        const DifferentialGeometry &dgShading, MemoryArena &arena) const {
+        const DifferentialGeometry &dgShading, MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     // Allocate _BSDF_, possibly doing bump mapping with _bumpMap_
     DifferentialGeometry dgs;
     if (bumpMap)
@@ -57,7 +57,6 @@ BSDF *MetalMaterial::GetBSDF(const DifferentialGeometry &dgGeom,
     else
         dgs = dgShading;
     BSDF *bsdf = BSDF_ALLOC(arena, BSDF)(dgs, dgGeom.nn);
-
     float rough = roughness->Evaluate(dgs);
     MicrofacetDistribution *md = BSDF_ALLOC(arena, Blinn)(1.f / rough);
 

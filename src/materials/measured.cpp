@@ -84,7 +84,7 @@ static map<string, float *> loadedRegularHalfangle;
 static map<string, KdTree<IrregIsotropicBRDFSample> *> loadedThetaPhi;
 MeasuredMaterial::MeasuredMaterial(const string &filename,
       Reference<Texture<float> > bump) {
-    bumpMap = bump;
+	bumpMap = bump;
     const char *suffix = strrchr(filename.c_str(), '.');
     regularHalfangleData = NULL;
     thetaPhiData = NULL;
@@ -193,7 +193,7 @@ MeasuredMaterial::MeasuredMaterial(const string &filename,
 
 BSDF *MeasuredMaterial::GetBSDF(const DifferentialGeometry &dgGeom,
                                 const DifferentialGeometry &dgShading,
-                                MemoryArena &arena) const {
+                                MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     // Allocate _BSDF_, possibly doing bump mapping with _bumpMap_
     DifferentialGeometry dgs;
     if (bumpMap)

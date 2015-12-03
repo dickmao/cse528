@@ -46,6 +46,7 @@ PerspectiveCamera:: PerspectiveCamera(const AnimatedTransform &cam2world,
     // Compute differential changes in origin for perspective camera rays
     dxCamera = RasterToCamera(Point(1,0,0)) - RasterToCamera(Point(0,0,0));
     dyCamera = RasterToCamera(Point(0,1,0)) - RasterToCamera(Point(0,0,0));
+	this->fov = fov;
 }
 
 
@@ -101,39 +102,16 @@ float PerspectiveCamera::GenerateRayDifferential(const CameraSample &sample,
         // Update ray for effect of lens
         ray->o = Point(lensU, lensV, 0.f);
         ray->d = Normalize(Pfocus - ray->o);
+
     }
 
     // Compute offset rays for _PerspectiveCamera_ ray differentials
-    if (lensRadius > 0.) {
-        // Compute _PerspectiveCamera_ ray differentials with defocus blur
-
-        // Sample point on lens
-        float lensU, lensV;
-        ConcentricSampleDisk(sample.lensU, sample.lensV, &lensU, &lensV);
-        lensU *= lensRadius;
-        lensV *= lensRadius;
-
-        Vector dx = Normalize(Vector(Pcamera + dxCamera));
-        float ft = focalDistance / dx.z;
-        Point pFocus = Point(0,0,0) + (ft * dx);
-        ray->rxOrigin = Point(lensU, lensV, 0.f);
-        ray->rxDirection = Normalize(pFocus - ray->rxOrigin);
-
-        Vector dy = Normalize(Vector(Pcamera + dyCamera));
-        ft = focalDistance / dy.z;
-        pFocus = Point(0,0,0) + (ft * dy);
-        ray->ryOrigin = Point(lensU, lensV, 0.f);
-        ray->ryDirection = Normalize(pFocus - ray->ryOrigin);
-    }
-    else {
-        ray->rxOrigin = ray->ryOrigin = ray->o;
-        ray->rxDirection = Normalize(Vector(Pcamera) + dxCamera);
-        ray->ryDirection = Normalize(Vector(Pcamera) + dyCamera);
-    }
-
+    ray->rxOrigin = ray->ryOrigin = ray->o;
+    ray->rxDirection = Normalize(Vector(Pcamera) + dxCamera);
+    ray->ryDirection = Normalize(Vector(Pcamera) + dyCamera);
     ray->time = sample.time;
-    CameraToWorld(*ray, ray);
     ray->hasDifferentials = true;
+	CameraToWorld(*ray, ray);
     return 1.f;
 }
 

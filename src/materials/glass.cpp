@@ -39,7 +39,7 @@
 #include "texture.h"
 
 // GlassMaterial Method Definitions
-BSDF *GlassMaterial::GetBSDF(const DifferentialGeometry &dgGeom, const DifferentialGeometry &dgShading, MemoryArena &arena) const {
+BSDF *GlassMaterial::GetBSDF(const DifferentialGeometry &dgGeom, const DifferentialGeometry &dgShading, MemoryArena &arena, int bounceNum, bool isSpecularBounce, bool saveTexture2, float rWeight, float gWeight, float bWeight) const {
     DifferentialGeometry dgs;
     if (bumpMap)
         Bump(bumpMap, dgGeom, dgShading, &dgs);
@@ -54,6 +54,7 @@ BSDF *GlassMaterial::GetBSDF(const DifferentialGeometry &dgGeom, const Different
             BSDF_ALLOC(arena, FresnelDielectric)(1., ior)));
     if (!T.IsBlack())
         bsdf->Add(BSDF_ALLOC(arena, SpecularTransmission)(T, 1., ior));
+
     return bsdf;
 }
 
@@ -64,7 +65,8 @@ GlassMaterial *CreateGlassMaterial(const Transform &xform,
     Reference<Texture<Spectrum> > Kt = mp.GetSpectrumTexture("Kt", Spectrum(1.f));
     Reference<Texture<float> > index = mp.GetFloatTexture("index", 1.5f);
     Reference<Texture<float> > bumpMap = mp.GetFloatTextureOrNull("bumpmap");
-    return new GlassMaterial(Kr, Kt, index, bumpMap);
+	float prob = mp.FindFloat("reflectanceProb", 0.5f);
+    return new GlassMaterial(Kr, Kt, index, bumpMap, prob);
 }
 
 

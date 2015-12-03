@@ -40,6 +40,8 @@
 #include "sampler.h"
 #include "paramset.h"
 #include "film.h"
+#include "../SampleWriter/SampleWriter.h" // MOD
+
 class RandomSampler : public Sampler {
 public:
     RandomSampler(int xstart, int xend, int ystart,
@@ -51,6 +53,10 @@ public:
     int GetMoreSamples(Sample *sample, RNG &rng);
     int RoundSize(int sz) const { return sz; }
     Sampler *GetSubSampler(int num, int count);
+	int getSamplePos() {
+		return samplePos;
+	}
+
 private:
     // RandomSampler Private Data
     int xPos, yPos, nSamples;

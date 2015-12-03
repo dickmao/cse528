@@ -912,6 +912,12 @@
     <ClInclude Include="..\core\targa.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\shapes\wavefront.h">
+      <Filter>Header Files\shapes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\textures\divide.h">
+      <Filter>Header Files\textures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\3rdparty\ilmbase-1.0.2\half.cpp">
@@ -1248,9 +1254,6 @@
       <Filter>Source Files\core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\imageio.cpp">
-      <Filter>Source Files\core</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\integrator.cpp">
       <Filter>Source Files\core</Filter>
     </ClCompile>
     <ClCompile Include="..\core\intersection.cpp">
@@ -1681,6 +1684,15 @@
     </ClCompile>
     <ClCompile Include="..\core\targa.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shapes\wavefront.cpp">
+      <Filter>Source Files\shapes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\textures\divide.cpp">
+      <Filter>Source Files\textures</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\integrator.cpp">
+      <Filter>Source Files\core</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

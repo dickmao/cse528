@@ -265,7 +265,7 @@ T MIPMap<T>::triangle(uint32_t level, float s, float t) const {
     return (1.f-ds) * (1.f-dt) * Texel(level, s0, t0) +
            (1.f-ds) * dt       * Texel(level, s0, t0+1) +
            ds       * (1.f-dt) * Texel(level, s0+1, t0) +
-           ds       * dt       * Texel(level, s0+1, t0+1);
+           ds       * dt       * Texel(level, s0+1, t0+1); 
 }
 
 
@@ -296,6 +296,7 @@ T MIPMap<T>::Lookup(float s, float t, float ds0, float dt0,
         dt1 *= scale;
         minorLength *= scale;
     }
+
     if (minorLength == 0.f) {
         PBRT_FINISHED_EWA_TEXTURE_LOOKUP();
         PBRT_STARTED_TRILINEAR_TEXTURE_LOOKUP(s, t);

@@ -36,6 +36,14 @@
 #include "spectrum.h"
 #include "parallel.h"
 #include "imageio.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include "../SampleWriter/Globals.h"	// MOD
+// #include <direct.h>						// MOD
+
+extern int iter;						// MOD
+extern char sceneName[BUFFER_SIZE];		// MOD
+extern int pbrtSamplesPerPixel;
 
 // ImageFilm Method Definitions
 ImageFilm::ImageFilm(int xres, int yres, Filter *filt, const float crop[4],
@@ -157,11 +165,11 @@ void ImageFilm::Splat(const CameraSample &sample, const Spectrum &L) {
 void ImageFilm::GetSampleExtent(int *xstart, int *xend,
                                 int *ystart, int *yend) const {
     *xstart = Floor2Int(xPixelStart + 0.5f - filter->xWidth);
-    *xend   = Ceil2Int(xPixelStart - 0.5f + xPixelCount +
+    *xend   = Ceil2Int(xPixelStart + 0.5f + xPixelCount +
                        filter->xWidth);
 
     *ystart = Floor2Int(yPixelStart + 0.5f - filter->yWidth);
-    *yend   = Ceil2Int(yPixelStart - 0.5f + yPixelCount +
+    *yend   = Ceil2Int(yPixelStart + 0.5f + yPixelCount +
                        filter->yWidth);
 }
 
@@ -219,25 +227,56 @@ void ImageFilm::UpdateDisplay(int x0, int y0, int x1, int y1,
 
 
 ImageFilm *CreateImageFilm(const ParamSet &params, Filter *filter) {
-    // Intentionally use FindOneString() rather than FindOneFilename() here
+
+	// Intentionally use FindOneString() rather than FindOneFilename() here
     // so that the rendered image is left in the working directory, rather
     // than the directory the scene file lives in.
     string filename = params.FindOneString("filename", "");
     if (PbrtOptions.imageFile != "") {
-        if (filename != "") {
+        /*if (filename != "") {
             Warning("Output filename supplied on command line, \"%s\", ignored "
                     "due to filename provided in scene description file, \"%s\".",
                     PbrtOptions.imageFile.c_str(), filename.c_str());
-        }
-        else
+        } 
+        else */
             filename = PbrtOptions.imageFile;
     }
-    if (filename == "")
-#ifdef PBRT_HAS_OPENEXR
-        filename = "pbrt.exr";
-#else
-        filename = "pbrt.tga";
-#endif
+//    if (filename == "")
+//#ifdef PBRT_HAS_OPENEXR
+//        filename = "pbrt.exr";
+//#else
+//        filename = "pbrt.tga";
+//#endif
+
+
+	//********************** MOD ************************//
+	string scene = sceneName;
+	size_t lastdot = scene.find_last_of("."); 
+    if (lastdot == std::string::npos){ 
+		strcpy(sceneName, scene.c_str()); 
+	} else {
+		std::string tempFile = scene.substr(0, lastdot);
+		strcpy(sceneName, tempFile.c_str()); 
+	}
+
+	// Make output directory
+	char extension[BUFFER_SIZE];
+	if(pbrtSamplesPerPixel != 0)
+		sprintf(extension, "_MC_%04d.exr", pbrtSamplesPerPixel);
+	else
+		sprintf(extension, "_MC.exr");
+
+	filename = std::string(sceneName) + std::string(extension);	
+	size_t lastslash = filename.find_last_of("\\");
+	int lastbackslash = filename.find_last_of("/");
+	lastslash = (lastslash > lastbackslash) ? lastslash : lastbackslash;
+	if (lastslash != std::string::npos) {
+		std::string outputFolder = filename.substr(0, lastslash + 1);
+		mkdir(outputFolder.c_str(),0755);
+		strerror(errno);
+	}
+						
+	//***************************************************//
 
     int xres = params.FindOneInt("xresolution", 640);
     int yres = params.FindOneInt("yresolution", 480);
@@ -255,6 +294,7 @@ ImageFilm *CreateImageFilm(const ParamSet &params, Filter *filter) {
     }
 
     return new ImageFilm(xres, yres, filter, crop, filename, openwin);
+
 }
 
 

@@ -196,10 +196,10 @@ void IrradiancePrimeTask::Run() {
 
 Spectrum IrradianceCacheIntegrator::Li(const Scene *scene,
         const Renderer *renderer, const RayDifferential &ray, const Intersection &isect,
-        const Sample *sample, RNG &rng, MemoryArena &arena) const {
+        const Sample *sample, RNG &rng, MemoryArena &arena, bool isSpecular, float rWeight, float gWeight, float bWeight) const {
     Spectrum L(0.);
     // Evaluate BSDF at hit point
-    BSDF *bsdf = isect.GetBSDF(ray, arena);
+    BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
     Vector wo = -ray.d;
     const Point &p = bsdf->dgShading.p;
     const Normal &n = bsdf->dgShading.nn;
@@ -348,7 +348,7 @@ Spectrum IrradianceCacheIntegrator::pathL(Ray &r, const Scene *scene,
         if (specularBounce)
             L += pathThroughput * isect.Le(-ray.d);
         // Evaluate BSDF at hit point
-        BSDF *bsdf = isect.GetBSDF(ray, arena);
+        BSDF *bsdf = isect.GetBSDF(ray, arena, -1);
         // Sample illumination from lights to find path contribution
         const Point &p = bsdf->dgShading.p;
         const Normal &n = bsdf->dgShading.nn;
