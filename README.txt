@@ -6,3 +6,8 @@ in src/{SampleWriter,RPF}
 Some adaptive classes such as the src/bandwidth and core/denoiser were written
 by Rouselle of at Disney Research.
 
+after git clone,
+cd cse528/src
+scons
+cd ../scenes
+./pbrt Conference.pbrt
