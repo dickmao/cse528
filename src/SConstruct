@@ -53,8 +53,7 @@ def setup_nice_print(env):
         env['LINKCOMSTR'] = "Linking $TARGET"
         env['ARCOMSTR'] = "Linking $TARGET"
 
-env = Environment(CCFLAGS = [ '-g', '-std=c++11', '-w', ],
-# '-fopenmp', 
+env = Environment(CCFLAGS = [ '-g', '-std=c++11', '-w', '-fopenmp' ],
                   CPPPATH = [ '#core', '#', '.' ] + tiff_includes,
                   LIBPATH = tiff_libdir,
                   YACCFLAGS = [ '-d', '-v', '-t' ],

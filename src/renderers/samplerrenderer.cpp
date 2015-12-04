@@ -305,7 +305,7 @@ void SamplerRenderer::Render(const Scene *scene) {
 	renderTasks.clear();
 	SampleWriter::GetAdaptPixels(sceneName, 8, bw);
         renderTasks.push_back(new SamplerRendererTask(scene, this, camera,
-                                                      reporter, bw, sample,
+                                                      asReporter, bw, sample,
                                                       visualizeObjectIds, 
                                                       adaptIterations-1-i, adaptIterations));
 	EnqueueTasks(renderTasks);

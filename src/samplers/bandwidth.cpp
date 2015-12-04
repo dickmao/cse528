@@ -17,16 +17,23 @@
 #include "montecarlo.h"
 #include "camera.h"
 #include "denoiser.h"
+#include "film/image.h"
+#include <fstream>
 
 BandwidthSampler::BandwidthSampler(int xstart, int xend, int ystart, int yend,
     int spp, float sopen, float sclose, float threshold, int nIterations,
-				   const SmoothFilm *film, int howmany)
+				   const Film *film, int howmany)
     : Sampler(xstart, xend, ystart, yend, spp, sopen, sclose),
-      _xPixelCount(film->GetXPixelCount()),
-      _yPixelCount(film->GetYPixelCount()),
       _nIterations(nIterations),
       _film(film) {
+    
+    const ImageFilm *imfilm = dynamic_cast<const ImageFilm *> (film);
+    if (imfilm == NULL)
+	Error("CreateBandwidthSampler(): film is not of type 'ImageFilm'");
 
+    _xPixelCount = imfilm->xPixelCount;
+    _yPixelCount = imfilm->yPixelCount;
+	  
     _xPos = xstart;
     _yPos = ystart;
     _xStartSub = xstart; _xEndSub = xend;
@@ -64,8 +71,8 @@ BandwidthSampler::BandwidthSampler(const BandwidthSampler *parent,
       _yPixelCount(parent->_yPixelCount),
       _nIterations(parent->_nIterations),
       _film(parent->_film),
+      _pixels(pixels),
       _howmany(parent->_howmany) {
-
     initAdapt(parent, pixels, taskNum, nPixels);
 }
 
@@ -98,14 +105,13 @@ void BandwidthSampler::MarkAdaptPixels(const std::vector<float >& w_ij)
     _pixels.resize(_howmany);
     std::set<std::pair<int, int > > seen;
     for (int i=0; i<vx.size() && seen.size() != _howmany; ++i) {
-        int pix = w_ij[vx[i]];
+        int pix = vx[i];
         // Compute pixel coordinates
         int yPos = pix / _xPixelCount;
         int xPos = pix - yPos * _xPixelCount;
 	if (seen.find(std::pair<int, int>(xPos, yPos)) != seen.end())
 	    continue;
 	seen.insert(std::pair<int, int>(xPos, yPos));
-	std::cout << xPos << " " << yPos << " " << pix << std::endl;
         // Store sampling area
         _pixels[seen.size()-1]._pix = pix;
         _pixels[seen.size()-1]._xPos = xPos + .5f;
@@ -113,6 +119,17 @@ void BandwidthSampler::MarkAdaptPixels(const std::vector<float >& w_ij)
         _pixels[seen.size()-1]._scale = 0;
     }
     _pixels.resize(seen.size());
+}
+
+void BandwidthSampler::DumpPixels(const std::string& fn)
+{
+    std::ofstream ofs;
+    ofs.open(fn);
+    for (PixelAreaVec::const_iterator cit = _pixels.begin();
+	 cit != _pixels.end(); ++cit) {
+	ofs << cit->_xPos << " " << cit->_yPos << std::endl;
+    }
+    ofs.close();
 }
 
 void BandwidthSampler::initBase(const BandwidthSampler * parent) {
@@ -152,7 +169,7 @@ void BandwidthSampler::initBase(const BandwidthSampler * parent) {
         }
     }
 
-    _film->GetFilterbank(_filters);
+//    _film->GetFilterbank(_filters);
 }
 
 
@@ -162,11 +179,11 @@ void BandwidthSampler::initAdapt(const BandwidthSampler * parent,
     _adaptive = true;
     _samplerInit = NULL;
 
-    int first = taskNum * nPixels;
+/*    int first = taskNum * nPixels;
     int last = min(int(pixels.size()), first + nPixels);
     _pixels.resize(max(0, last-first));
     if (_pixels.size() > 0)
-        copy(pixels.begin()+first, pixels.begin()+last, _pixels.begin());
+    copy(pixels.begin()+first, pixels.begin()+last, _pixels.begin()); */
     
     // Compute the total number of pixels to be generated
     int nPix = _xPixelCount * _yPixelCount;
@@ -187,7 +204,7 @@ void BandwidthSampler::initAdapt(const BandwidthSampler * parent,
         }
     }
     
-    _film->GetFilterbank(_filters);
+//    _film->GetFilterbank(_filters);
 }
 
 
@@ -253,7 +270,7 @@ int BandwidthSampler::GetMoreSamples(Sample *samples, RNG &rng) {
     for (int i = 0; i < samplesPerPixel; i++) {
         // Importance sampling
         float xTmp = rng.RandomFloat(), yTmp = rng.RandomFloat();
-        _filters[scale]->WarpSampleToPixelOffset(xTmp, yTmp);
+//        _filters[scale]->WarpSampleToPixelOffset(xTmp, yTmp);
         samples[i].imageX = xPos + xTmp;
         samples[i].imageY = yPos + yTmp;
         samples[i].lensU = rng.RandomFloat();
@@ -298,11 +315,11 @@ BandwidthSampler *CreateBandwidthSampler(const ParamSet &params,
     film->GetSampleExtent(&xstart, &xend, &ystart, &yend);
 
     // Ensure we have a 'SmoothFilm'
-    const SmoothFilm *smoothFilm = dynamic_cast<const SmoothFilm *> (film);
-    if (smoothFilm == NULL) {
-        Error("CreateBandwidthSampler(): film is not of type 'SmoothFilm'");
-        return NULL;
-    }
+    // const SmoothFilm *smoothFilm = dynamic_cast<const SmoothFilm *> (film);
+    // if (smoothFilm == NULL) {
+    //     Error("CreateBandwidthSampler(): film is not of type 'SmoothFilm'");
+    //     return NULL;
+    // }
 
     // Output the sampler parameters
     Info("CreateBandwidthSampler:\n");
@@ -311,7 +328,7 @@ BandwidthSampler *CreateBandwidthSampler(const ParamSet &params,
 
     return new BandwidthSampler(xstart, xend, ystart, yend, ns,
                                 camera->shutterOpen, camera->shutterClose, th,
-                                nIterations, smoothFilm, howmany);
+                                nIterations, film, howmany);
 }
 
 

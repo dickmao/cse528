@@ -667,7 +667,7 @@ Filter *MakeFilter(const string &name,
 Film *MakeFilm(const string &name,
     const ParamSet &paramSet, Filter *filter) {
     Film *film = NULL;
-    film = CreateSmoothFilm(paramSet, filter);
+    film = CreateImageFilm(paramSet, filter);
     paramSet.ReportUnused();
     return film;
 }

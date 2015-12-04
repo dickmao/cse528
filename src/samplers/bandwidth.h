@@ -34,7 +34,7 @@ public:
     // BandwidthSampler public methods
     BandwidthSampler(int xstart, int xend, int ystart, int yend, int spp,
         float sopen, float sclose, float threshold, int nIterations,
-		     const SmoothFilm *film, int howmany);
+		     const Film *film, int howmany);
     BandwidthSampler(const BandwidthSampler *parent, int xstart, int xend,
         int ystart, int yend);
     BandwidthSampler(const BandwidthSampler *parent, const PixelAreaVec &pixels,
@@ -42,6 +42,7 @@ public:
     virtual ~BandwidthSampler();
 
     Sampler *GetSubSampler(int num, int count);
+    void DumpPixels(const std::string& fn);
     int GetMoreSamples(Sample *sample, RNG &rng);
 
     int MaximumSampleCount() { return max(1, samplesPerPixel); }
@@ -56,7 +57,7 @@ public:
     int GetIterationCount() { return _nIterations; }
 
     void GetWorstPixels(int nPixels) {
-        _film->GetWorstPixels(min(nPixels, _pixelsToSampleTotal), _pixels, samplesPerPixel);
+//        _film->GetWorstPixels(min(nPixels, _pixelsToSampleTotal), _pixels, samplesPerPixel);
         _pixelsToSampleTotal -= _pixels.size();
     }
     void MarkAdaptPixels(const std::vector<float >& wij);
@@ -70,7 +71,7 @@ private:
     
     // BandwidthSampler private attributes
     int _nIterations;
-    const SmoothFilm *_film;
+    const Film *_film;
     bool _adaptive;
     int _pixelsToSampleTotal;
 

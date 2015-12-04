@@ -9,6 +9,8 @@
 #include "ExrUtilities.h"
 #include "../core/timer.h"
 #include "denoiser.h"
+#include "samplers/bandwidth.h"
+#include <sys/stat.h>
 using namespace std;
 
 void RPF(CImg<float>* rpfImg, CImg<float>* origImg);
@@ -42,9 +44,19 @@ void RPF2(BandwidthSampler *sampler, char* outputFolder, float* pbrtData, size_t
     // float* imgData = new float[NUM_OF_COLORS * pbrtWidth * pbrtHeight];
     // WriteEXRFile(outputName, (int) pbrtWidth, (int) pbrtHeight, rpfImg->data());
     
-    // // Save original image
-    // sprintf(outputName, "%s_MC_%04d.exr", outputFolder, pbrtSpp);
-    // WriteEXRFile(outputName, (int) pbrtWidth, (int) pbrtHeight, origImg->data());
+    // Save original image
+    static int iter = 1;
+    const std::string folder = std::string(outputFolder) + "_overlay";
+    mkdir(folder.c_str(), 0755);
+    sampler->DumpPixels(folder + "/" + std::to_string(iter++) + ".txt");
+
+    static bool writeOnce = false;
+    if (!writeOnce) {
+	writeOnce = true;
+	char outputName[1000];
+	sprintf(outputName, "%s_raw.exr", outputFolder, pbrtSpp);
+	WriteEXRFile(outputName, (int) pbrtWidth, (int) pbrtHeight, origImg->data());
+    }
     
     // Clean up
     delete rpfImg;

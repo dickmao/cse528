@@ -232,16 +232,26 @@ RPF2(CImg<float>* rpfImg, CImg<float>* origImg, BandwidthSampler *sampler) {
     
     
     // For monitoring program progress
-    int amountCompleted = 0;
-    const int speedup = 20;
-    
+    RNG rng;
+    const int everyother = int(rng.RandomFloat()*5);
     // Multithreaded portion
     // Loop through each pixel
+    int pixelsProcessed = 0;
+    for(int i = everyother; i < height; i += (15+everyother)) { 
+	for(int j = everyother; j < width; j += (15+everyother)) {
+	    pixelsProcessed++;
+	}
+    }
+    std::cout << "Processing " << pixelsProcessed << " pixels" 
+	      << " from rows " << everyother << "-" << height << " cols " 
+	      << everyother << "-" << width << " every other " << 15+everyother
+	      << std::endl;
+
 #pragma omp parallel 
     {
 #pragma omp for schedule(dynamic) nowait 
-	for(int i = 0; i < height; i += speedup) { 
-	    for(int j = 0; j < width; j += speedup) {
+	for(int i = everyother; i < height; i += (15+everyother)) { 
+	    for(int j = everyother; j < width; j += (15+everyother)) {
 		
 		// Get this thread's number and retrieve the allocated block
 		int threadNum = omp_get_thread_num();
@@ -273,13 +283,6 @@ RPF2(CImg<float>* rpfImg, CImg<float>* origImg, BandwidthSampler *sampler) {
 		neighboringSamples->setNumOfSamples(0);
 		
 		// Used for updating the user of program progress
-		amountCompleted++;	
-	    }
-	    
-	    // Update the user
-	    if(i % printDelta == 0) {
-		printf("Percentage Complete: %2.2f \n", (float(amountCompleted) / ((float)totalSize / ((float)speedup * (float)speedup))) * 100.0);
-		fflush(stdout);
 	    }
 	    
 	}

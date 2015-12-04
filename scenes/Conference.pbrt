@@ -3,11 +3,11 @@ Camera "perspective" "float fov" [70] "float lensradius" [.005] "float focaldist
 
 Accelerator "bvh"
 
-Film "smooth"
+Film "image"
     "integer xresolution" [1024] "integer yresolution" [1024]
     "string filename"     ["Conference.exr"]
 
-Sampler "bandwidth" "integer pixelsamples" [8] "integer niterations" [1]
+Sampler "bandwidth" "integer pixelsamples" [8] "integer niterations" [1] "integer ErrorPixelsPerIteration" [80] "integer adaptIterations" [0]
 
 PixelFilter "box"
 
